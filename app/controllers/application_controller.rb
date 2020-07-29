@@ -1,26 +1,31 @@
 class ApplicationController < ActionController::API
     before_action :authorized
     def encode_token(payload)
-    JWT.encode(payload, 's3cr3t')
+        # s3cr3t key used and we can setup it -> salt encryption algorithm
+    JWT.encode(payload, 's3cr3t' )
     end
     def auth_header
-    # { Authorization: 'Bearer <token>' }
-    request.headers['Authorization']
+        # { Authorization: 'Bearer <token>' }
+        request.headers['Authorization']
     end
     def decoded_token
         if auth_header
+        # puts auth_header
         token = auth_header.split(' ')[1]
         # header: { 'Authorization': 'Bearer <token>' }
         begin
         JWT.decode(token, 's3cr3t', true, algorithm: 'HS256')
-        rescue JWT::DecodeError
+        rescue JWT::DecodeError || JWT::ExpiredSignature
         nil
         end
         end
     end
     def logged_in_user
         if decoded_token
+        puts "hello"
+        puts decoded_token
         user_id = decoded_token[0]['user_id']
+        puts user_id
         @user = User.find_by(id: user_id)
         end
     end
